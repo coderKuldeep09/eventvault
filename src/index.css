@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-vault-light: #fffcfc;
+  --color-vault-dark: #050505;
+  --color-brand: #ec4899;
+
+  --font-sans: "Inter", sans-serif;
+}
+
+::selection {
+  background: #ec4899;
+  color: white;
+}
