@@ -3,8 +3,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import Masonry from "react-masonry-css";
 import {
-  Trash2, CloudUpload, ArrowLeft, Upload,
-  Plus, X, FolderPlus, Image as ImageIcon, Share2, Sparkles, ScanFace, Layers, RefreshCw, AlertTriangle,
+  Trash2, CloudUpload, ArrowLeft, Upload, ZoomIn,
+  Plus, X, FolderPlus, Image as ImageIcon, Share2, Sparkles, ScanFace, Layers, RefreshCw, AlertTriangle, CloudUpload as CloudCheck,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import toast from "react-hot-toast";
@@ -51,6 +51,7 @@ export default function OrganiserDashboard() {
   const [newCatName, setNewCatName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]); // files staged for upload (preview only)
+  const [pendingZoomIndex, setPendingZoomIndex] = useState(null); // index of pending image to zoom
 
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -107,47 +108,56 @@ export default function OrganiserDashboard() {
     toast.error("Folder removed");
   };
 
-  // Stage 1: files are dropped/selected → only add to pendingFiles for preview
+  // Stage 1: files dropped/selected → store with target category for preview (NO upload yet)
   const onDrop = (files) => {
     if (!activeCategory || activeCategory.id === ALL_VIEW.id) return toast.error("Pick a specific folder first!");
     const withPreviews = files.map((f) =>
-      Object.assign(f, { preview: URL.createObjectURL(f) })
+      Object.assign(f, { preview: URL.createObjectURL(f), _targetCategory: activeCategory })
     );
     setPendingFiles((prev) => [...prev, ...withPreviews]);
-    toast.success(`${files.length} photo${files.length > 1 ? "s" : ""} staged — click Upload to save`);
+    toast(`${files.length} photo${files.length > 1 ? "s" : ""} staged in preview — hit Publish All to upload`, {
+      icon: "👁️",
+    });
   };
 
-  // Stage 2: Upload button → commit pendingFiles to storage
+  // Stage 2: "Publish All" — commit ALL pending files across all folders
+  // Each pending file carries a .targetCategory (set on drop); fall back to activeCategory.
   function commitUpload() {
     if (!pendingFiles.length) return;
-    if (!activeCategory || activeCategory.id === ALL_VIEW.id) {
-      toast.error("Pick (or create) a folder first, then upload into it");
-      return;
-    }
+    const count = pendingFiles.length;
     setIsUploading(true);
-    // Brief pause so it *feels* like a network request — swap in real cloud call here
     setTimeout(() => {
-      const updated = addEventPhotos(event.id, activeCategory, pendingFiles);
+      // Group pending by their target category (or current activeCategory)
+      let updated = images;
+      const byCategory = {};
+      pendingFiles.forEach((f) => {
+        const cat = f._targetCategory || activeCategory;
+        if (!cat || cat.id === ALL_VIEW.id) return;
+        if (!byCategory[cat.id]) byCategory[cat.id] = { cat, files: [] };
+        byCategory[cat.id].files.push(f);
+      });
+      Object.values(byCategory).forEach(({ cat, files }) => {
+        updated = addEventPhotos(event.id, cat, files);
+      });
       setImages(updated);
       setPendingFiles([]);
       setIsUploading(false);
-      toast.success(`Uploaded ${pendingFiles.length} photo${pendingFiles.length > 1 ? "s" : ""}`);
-    }, 700);
+      toast.success(
+        `☁️ ${count} photo${count > 1 ? "s" : ""} published to cloud successfully!`,
+        { duration: 4000, style: { fontWeight: "800", fontSize: "13px" } }
+      );
+    }, 800);
   }
 
   const { getRootProps, getInputProps, open: openFilePicker } = useDropzone({ onDrop, accept: { "image/*": [] } });
 
-  // Top-right Upload button: if files are pending → commit them; otherwise open picker
+  // Top-right button: open file picker (staging only)
   function handleUploadClick() {
     if (!activeCategory || activeCategory.id === ALL_VIEW.id) {
-      toast.error("Pick (or create) a folder first, then upload into it");
+      toast.error("Pick (or create) a folder first, then add photos");
       return;
     }
-    if (pendingFiles.length > 0) {
-      commitUpload();
-    } else {
-      openFilePicker();
-    }
+    openFilePicker();
   }
 
   const onScanDrop = useCallback((files) => {
@@ -285,6 +295,7 @@ export default function OrganiserDashboard() {
         .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #db2777 transparent; }
       `}</style>
 
+      {/* Lightbox for uploaded images */}
       <Lightbox
         open={open}
         close={() => setOpen(false)}
@@ -292,6 +303,65 @@ export default function OrganiserDashboard() {
         slides={displayImages.map(img => ({ src: img.src }))}
         plugins={[Fullscreen]}
       />
+      {/* Hover-style zoom for pending preview images — bg content stays visible */}
+      {pendingZoomIndex !== null && pendingFiles[pendingZoomIndex] && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+          style={{ backgroundColor: "rgba(0,0,0,0.18)" }}
+        >
+          {/* Clickable scrim to close */}
+          <div className="absolute inset-0 pointer-events-auto" onClick={() => setPendingZoomIndex(null)} />
+
+          {/* Floating zoomed card — like a hover zoom but triggered by button */}
+          <div
+            className="relative pointer-events-auto rounded-3xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.35)] border-4 border-amber-300"
+            style={{
+              width: "min(560px, 90vw)",
+              animation: "zoomIn 0.18s cubic-bezier(0.34,1.56,0.64,1) both",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <style>{`
+              @keyframes zoomIn {
+                from { transform: scale(0.85); opacity: 0; }
+                to   { transform: scale(1);    opacity: 1; }
+              }
+            `}</style>
+            <img
+              src={pendingFiles[pendingZoomIndex].preview}
+              alt={pendingFiles[pendingZoomIndex].name}
+              className="w-full object-contain"
+              style={{ maxHeight: "70vh", background: "#111" }}
+            />
+            {/* Bottom strip — Preview badge + actions */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-4 py-3 flex items-end justify-between gap-2">
+              <div className="min-w-0">
+                <span className="inline-block bg-amber-400/90 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-1">
+                  👁️ Preview Only — Not Uploaded
+                </span>
+                <p className="text-white/80 text-[10px] font-bold truncate">{pendingFiles[pendingZoomIndex].name}</p>
+              </div>
+              <div className="flex gap-1.5 shrink-0">
+                {pendingZoomIndex > 0 && (
+                  <button onClick={() => setPendingZoomIndex(i => i - 1)} className="w-7 h-7 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition text-sm font-bold">‹</button>
+                )}
+                {pendingZoomIndex < pendingFiles.length - 1 && (
+                  <button onClick={() => setPendingZoomIndex(i => i + 1)} className="w-7 h-7 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition text-sm font-bold">›</button>
+                )}
+                <button
+                  onClick={() => { setPendingFiles(prev => prev.filter((_, idx) => idx !== pendingZoomIndex)); setPendingZoomIndex(null); }}
+                  className="w-7 h-7 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition"
+                >
+                  <Trash2 size={12} />
+                </button>
+                <button onClick={() => setPendingZoomIndex(null)} className="w-7 h-7 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition">
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FIXED TOP HEADER */}
       <header className="flex-none pt-4 pb-3 px-8 max-w-[1600px] w-full mx-auto flex flex-col gap-2">
@@ -326,22 +396,28 @@ export default function OrganiserDashboard() {
             >
               {event.plan.name} · {expired ? "Expired" : `${remaining}d left`}
             </button>
+            {/* Add photos to staging */}
             <button
               onClick={handleUploadClick}
-              disabled={isUploading}
-              className={`flex items-center gap-1.5 border px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition ${
-                pendingFiles.length > 0
-                  ? "bg-pink-500 border-pink-500 text-white hover:bg-pink-600 shadow-lg shadow-pink-500/30"
-                  : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-pink-300 dark:hover:border-pink-500/40"
-              } disabled:opacity-50`}
+              className="flex items-center gap-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-pink-300 dark:hover:border-pink-500/40 transition"
             >
-              {isUploading ? (
-                <span className="w-3 h-3 border-2 border-current border-t-transparent animate-spin rounded-full" />
-              ) : (
-                <Upload size={13} className={pendingFiles.length > 0 ? "text-white" : "text-pink-500"} />
-              )}
-              {pendingFiles.length > 0 ? `Upload ${pendingFiles.length}` : "Upload"}
+              <Upload size={13} className="text-pink-500" /> Add Photos
             </button>
+            {/* Publish All — final cloud upload of every staged photo */}
+            {pendingFiles.length > 0 && (
+              <button
+                onClick={commitUpload}
+                disabled={isUploading}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-pink-600 to-rose-500 text-white px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition shadow-lg shadow-pink-500/30 disabled:opacity-50 animate-pulse"
+              >
+                {isUploading ? (
+                  <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                ) : (
+                  <CloudUpload size={13} />
+                )}
+                {isUploading ? "Uploading…" : `Publish All (${pendingFiles.length})`}
+              </button>
+            )}
             <button
               onClick={() => setScanOpen(true)}
               className="flex items-center gap-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-pink-300 dark:hover:border-pink-500/40 transition"
@@ -430,26 +506,10 @@ export default function OrganiserDashboard() {
                 </p>
                 {pendingFiles.length > 0 && (
                   <p className="mt-1.5 text-[9px] font-black uppercase tracking-widest text-pink-500">
-                    {pendingFiles.length} file{pendingFiles.length > 1 ? "s" : ""} staged · hit Upload ↑
+                    {pendingFiles.length} staged · preview on right →
                   </p>
                 )}
               </div>
-              {/* Pending previews thumbnails */}
-              {pendingFiles.length > 0 && (
-                <div className="mt-3 flex gap-2 flex-wrap">
-                  {pendingFiles.map((f, i) => (
-                    <div key={i} className="relative group w-12 h-12 rounded-xl overflow-hidden border-2 border-pink-300">
-                      <img src={f.preview} alt={f.name} className="w-full h-full object-cover" />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setPendingFiles(prev => prev.filter((_, idx) => idx !== i)); }}
-                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
 
               <div className="mt-4">
                 <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
@@ -491,43 +551,105 @@ export default function OrganiserDashboard() {
                 )}
               </div>
 
-              {displayImages.length > 0 ? (
+              {/* ── Pending preview banner ── */}
+              {pendingFiles.length > 0 && (
+                <div className="mb-4 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-amber-500 text-lg">👁️</span>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                      {pendingFiles.length} photo{pendingFiles.length > 1 ? "s" : ""} in preview — not uploaded yet
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPendingFiles([])}
+                      className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition"
+                    >
+                      Discard
+                    </button>
+                    <button
+                      onClick={commitUpload}
+                      disabled={isUploading}
+                      className="flex items-center gap-1.5 bg-pink-500 text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-pink-600 transition disabled:opacity-50"
+                    >
+                      {isUploading ? <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Upload size={11} />}
+                      Upload now
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {(displayImages.length > 0 || pendingFiles.length > 0) ? (
                 <>
-                  <PhotoSelectionBar
-                    total={displayImages.length}
-                    selectedCount={selected.size}
-                    allSelected={allSelected}
-                    onToggleAll={toggleAll}
-                    onDownloadZip={handleDownloadZip}
-                    onDeleteSelected={handleDeleteSelected}
-                    onClearSelection={() => setSelected(new Set())}
-                    downloading={downloading}
-                    deleting={deleting}
-                  />
-                  <Masonry breakpointCols={{default: 2, 1100: 2, 700: 1}} className="flex -ml-6 w-auto" columnClassName="pl-6">
+                  {displayImages.length > 0 && (
+                    <PhotoSelectionBar
+                      total={displayImages.length}
+                      selectedCount={selected.size}
+                      allSelected={allSelected}
+                      onToggleAll={toggleAll}
+                      onDownloadZip={handleDownloadZip}
+                      onDeleteSelected={handleDeleteSelected}
+                      onClearSelection={() => setSelected(new Set())}
+                      downloading={downloading}
+                      deleting={deleting}
+                    />
+                  )}
+                  <Masonry breakpointCols={{default: 3, 1100: 3, 700: 2}} className="flex -ml-4 w-auto" columnClassName="pl-4">
+                    {/* Uploaded images */}
                     {displayImages.map((img, i) => (
-                      <div key={img.id} className="relative group rounded-[2.5rem] overflow-hidden mb-6 shadow-2xl border-4 border-white dark:border-gray-800 bg-white dark:bg-gray-900">
+                      <div key={img.id} className="relative group rounded-2xl overflow-hidden mb-4 shadow-lg border-2 border-white dark:border-gray-800 bg-white dark:bg-gray-900">
                         <img
                           src={img.src}
                           alt={img.name}
-                          className="w-full h-auto object-cover cursor-zoom-in group-hover:scale-110 transition-transform duration-700"
+                          className="w-full object-cover cursor-zoom-in group-hover:scale-105 transition-transform duration-500"
+                          style={{ maxHeight: "200px", objectFit: "cover" }}
                           onClick={() => { setCurrentIndex(i); setOpen(true); }}
                         />
                         <SelectToggle selected={selected.has(img.id)} onToggle={() => toggleOne(img.id)} />
-                        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black text-white">
+                        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-full text-[9px] font-black text-white">
                           {img.sizeMB} MB
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all p-6 flex items-end justify-between pointer-events-none">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all p-4 flex items-end justify-between pointer-events-none">
                            <span className="text-[9px] font-black text-pink-400 uppercase tracking-widest">{img.categoryName}</span>
                            <button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleDeletePhoto(img.id);
-                             }}
-                             className="p-3 bg-red-500 text-white rounded-2xl hover:bg-red-600 transition-all shadow-lg active:scale-90 pointer-events-auto"
+                             onClick={(e) => { e.stopPropagation(); handleDeletePhoto(img.id); }}
+                             className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-lg active:scale-90 pointer-events-auto"
                            >
-                              <Trash2 size={16} />
+                              <Trash2 size={13} />
                            </button>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Pending preview images — not uploaded yet */}
+                    {pendingFiles.map((f, i) => (
+                      <div key={`pending-${i}`} className="relative group rounded-2xl overflow-hidden mb-4 shadow-lg border-2 border-amber-300 dark:border-amber-500/40 bg-white dark:bg-gray-900">
+                        <img
+                          src={f.preview}
+                          alt={f.name}
+                          className="w-full object-cover"
+                          style={{ maxHeight: "200px", objectFit: "cover" }}
+                        />
+                        {/* Top action buttons: zoom + remove */}
+                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                          <button
+                            onClick={() => setPendingZoomIndex(i)}
+                            className="w-7 h-7 bg-black/70 backdrop-blur text-white rounded-full flex items-center justify-center hover:bg-amber-500 transition"
+                            title="Zoom preview"
+                          >
+                            <ZoomIn size={12} />
+                          </button>
+                          <button
+                            onClick={() => setPendingFiles(prev => prev.filter((_, idx) => idx !== i))}
+                            className="w-7 h-7 bg-black/70 backdrop-blur text-white rounded-full flex items-center justify-center hover:bg-red-500 transition"
+                            title="Remove"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                        {/* Bottom: Preview Only badge + filename */}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3">
+                          <span className="inline-block bg-amber-400/90 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-1">👁️ Preview Only</span>
+                          <p className="text-[9px] font-bold text-white/80 truncate">{f.name}</p>
                         </div>
                       </div>
                     ))}
