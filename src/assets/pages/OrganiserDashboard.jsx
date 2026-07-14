@@ -8,9 +8,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import toast from "react-hot-toast";
-import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
-import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
+
 import {
   getEventBySlug,
   addCategory as storeAddCategory,
@@ -52,9 +50,8 @@ export default function OrganiserDashboard() {
   const [isUploading, setIsUploading] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]); // files staged for upload (preview only)
   const [pendingZoomIndex, setPendingZoomIndex] = useState(null); // index of pending image to zoom
+  const [uploadedZoomIndex, setUploadedZoomIndex] = useState(null); // index of uploaded image to zoom
 
-  const [open, setOpen] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   const [deleteEventOpen, setDeleteEventOpen] = useState(false);
@@ -295,14 +292,53 @@ export default function OrganiserDashboard() {
         .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #db2777 transparent; }
       `}</style>
 
-      {/* Lightbox for uploaded images */}
-      <Lightbox
-        open={open}
-        close={() => setOpen(false)}
-        index={currentIndex}
-        slides={displayImages.map(img => ({ src: img.src }))}
-        plugins={[Fullscreen]}
-      />
+      {/* Zoom popup for uploaded images — same style as pending preview popup */}
+      {uploadedZoomIndex !== null && displayImages[uploadedZoomIndex] && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+        >
+          {/* Clickable scrim to close */}
+          <div className="absolute inset-0" onClick={() => setUploadedZoomIndex(null)} />
+
+          {/* Floating zoomed card */}
+          <div
+            className="relative rounded-3xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.45)] border-4 border-pink-400"
+            style={{
+              width: "min(640px, 92vw)",
+              animation: "zoomIn 0.18s cubic-bezier(0.34,1.56,0.64,1) both",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={displayImages[uploadedZoomIndex].src}
+              alt={displayImages[uploadedZoomIndex].name}
+              className="w-full object-contain"
+              style={{ maxHeight: "75vh", background: "#111" }}
+            />
+            {/* Bottom strip — file info + navigation */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent px-4 py-3 flex items-end justify-between gap-2">
+              <div className="min-w-0">
+                <span className="inline-block bg-pink-500/90 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-1">
+                  ☁️ Uploaded
+                </span>
+                <p className="text-white/80 text-[10px] font-bold truncate">{displayImages[uploadedZoomIndex].name}</p>
+              </div>
+              <div className="flex gap-1.5 shrink-0">
+                {uploadedZoomIndex > 0 && (
+                  <button onClick={() => setUploadedZoomIndex(i => i - 1)} className="w-7 h-7 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition text-sm font-bold">‹</button>
+                )}
+                {uploadedZoomIndex < displayImages.length - 1 && (
+                  <button onClick={() => setUploadedZoomIndex(i => i + 1)} className="w-7 h-7 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition text-sm font-bold">›</button>
+                )}
+                <button onClick={() => setUploadedZoomIndex(null)} className="w-7 h-7 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition">
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Hover-style zoom for pending preview images — bg content stays visible */}
       {pendingZoomIndex !== null && pendingFiles[pendingZoomIndex] && (
         <div
@@ -603,7 +639,7 @@ export default function OrganiserDashboard() {
                           alt={img.name}
                           className="w-full object-cover cursor-zoom-in group-hover:scale-105 transition-transform duration-500"
                           style={{ maxHeight: "200px", objectFit: "cover" }}
-                          onClick={() => { setCurrentIndex(i); setOpen(true); }}
+                          onClick={() => setUploadedZoomIndex(i)}
                         />
                         <SelectToggle selected={selected.has(img.id)} onToggle={() => toggleOne(img.id)} />
                         <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-full text-[9px] font-black text-white">
