@@ -50,6 +50,7 @@ export default function OrganiserDashboard() {
   const [activeCategory, setActiveCategory] = useState(ALL_VIEW);
   const [newCatName, setNewCatName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState([]); // files staged for upload (preview only)
 
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -106,27 +107,47 @@ export default function OrganiserDashboard() {
     toast.error("Folder removed");
   };
 
+  // Stage 1: files are dropped/selected → only add to pendingFiles for preview
   const onDrop = (files) => {
     if (!activeCategory || activeCategory.id === ALL_VIEW.id) return toast.error("Pick a specific folder first!");
-    setIsUploading(true);
-    // Brief pause so the drop still *feels* like an upload — once real
-    // cloud storage is wired in, this is where that network call goes.
-    setTimeout(() => {
-      const updated = addEventPhotos(event.id, activeCategory, files);
-      setImages(updated);
-      setIsUploading(false);
-      toast.success(`Added ${files.length} photo${files.length > 1 ? "s" : ""}`);
-    }, 500);
+    const withPreviews = files.map((f) =>
+      Object.assign(f, { preview: URL.createObjectURL(f) })
+    );
+    setPendingFiles((prev) => [...prev, ...withPreviews]);
+    toast.success(`${files.length} photo${files.length > 1 ? "s" : ""} staged — click Upload to save`);
   };
+
+  // Stage 2: Upload button → commit pendingFiles to storage
+  function commitUpload() {
+    if (!pendingFiles.length) return;
+    if (!activeCategory || activeCategory.id === ALL_VIEW.id) {
+      toast.error("Pick (or create) a folder first, then upload into it");
+      return;
+    }
+    setIsUploading(true);
+    // Brief pause so it *feels* like a network request — swap in real cloud call here
+    setTimeout(() => {
+      const updated = addEventPhotos(event.id, activeCategory, pendingFiles);
+      setImages(updated);
+      setPendingFiles([]);
+      setIsUploading(false);
+      toast.success(`Uploaded ${pendingFiles.length} photo${pendingFiles.length > 1 ? "s" : ""}`);
+    }, 700);
+  }
 
   const { getRootProps, getInputProps, open: openFilePicker } = useDropzone({ onDrop, accept: { "image/*": [] } });
 
+  // Top-right Upload button: if files are pending → commit them; otherwise open picker
   function handleUploadClick() {
     if (!activeCategory || activeCategory.id === ALL_VIEW.id) {
       toast.error("Pick (or create) a folder first, then upload into it");
       return;
     }
-    openFilePicker();
+    if (pendingFiles.length > 0) {
+      commitUpload();
+    } else {
+      openFilePicker();
+    }
   }
 
   const onScanDrop = useCallback((files) => {
@@ -307,9 +328,19 @@ export default function OrganiserDashboard() {
             </button>
             <button
               onClick={handleUploadClick}
-              className="flex items-center gap-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-pink-300 dark:hover:border-pink-500/40 transition"
+              disabled={isUploading}
+              className={`flex items-center gap-1.5 border px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition ${
+                pendingFiles.length > 0
+                  ? "bg-pink-500 border-pink-500 text-white hover:bg-pink-600 shadow-lg shadow-pink-500/30"
+                  : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-pink-300 dark:hover:border-pink-500/40"
+              } disabled:opacity-50`}
             >
-              <Upload size={13} className="text-pink-500" /> Upload
+              {isUploading ? (
+                <span className="w-3 h-3 border-2 border-current border-t-transparent animate-spin rounded-full" />
+              ) : (
+                <Upload size={13} className={pendingFiles.length > 0 ? "text-white" : "text-pink-500"} />
+              )}
+              {pendingFiles.length > 0 ? `Upload ${pendingFiles.length}` : "Upload"}
             </button>
             <button
               onClick={() => setScanOpen(true)}
@@ -397,7 +428,28 @@ export default function OrganiserDashboard() {
                 <p className="text-[10px] font-black uppercase text-gray-500 tracking-tighter">
                   {activeCategory && activeCategory.id !== ALL_VIEW.id ? `Add to ${activeCategory.name}` : "Select a folder to upload"}
                 </p>
+                {pendingFiles.length > 0 && (
+                  <p className="mt-1.5 text-[9px] font-black uppercase tracking-widest text-pink-500">
+                    {pendingFiles.length} file{pendingFiles.length > 1 ? "s" : ""} staged · hit Upload ↑
+                  </p>
+                )}
               </div>
+              {/* Pending previews thumbnails */}
+              {pendingFiles.length > 0 && (
+                <div className="mt-3 flex gap-2 flex-wrap">
+                  {pendingFiles.map((f, i) => (
+                    <div key={i} className="relative group w-12 h-12 rounded-xl overflow-hidden border-2 border-pink-300">
+                      <img src={f.preview} alt={f.name} className="w-full h-full object-cover" />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPendingFiles(prev => prev.filter((_, idx) => idx !== i)); }}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="mt-4">
                 <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
