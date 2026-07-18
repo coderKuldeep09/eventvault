@@ -48,7 +48,16 @@ export function CreateEventModal({ open, onClose, organiserId, onCreated }) {
       open={open}
       onClose={handleClose}
       eyebrow={createdEvent ? "You're all set" : "New event"}
-      title={createdEvent ? createdEvent.name : "Create an event"}
+      title={createdEvent ? (
+        <span className="flex items-center gap-3">
+          {createdEvent.numericId && (
+            <span className="text-lg text-pink-500 font-bold bg-pink-500/10 px-2 py-0.5 rounded-xl border border-pink-500/20">
+              #{createdEvent.numericId}
+            </span>
+          )}
+          {createdEvent.name}
+        </span>
+      ) : "Create an event"}
       maxWidth="max-w-xl"
     >
       {!createdEvent ? (

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowRight, User, AtSign, Lock, ShieldCheck } from "lucide-react";
+import { ArrowRight, User, AtSign, Lock, ShieldCheck, Mail, Building2, MapPin, Phone, FileText } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "./Layout";
 import { AuthInput } from "./AuthInput";
@@ -15,7 +15,7 @@ export default function Organiser() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const [isSignup, setIsSignup] = useState(false);
-  const [form, setForm] = useState({ name: "", username: "", password: "", confirm: "" });
+  const [form, setForm] = useState({ name: "", username: "", email: "", phone: "", address: "", gstNo: "", password: "", confirm: "" });
   const [error, setError] = useState("");
 
   function handleChange(e) {
@@ -26,7 +26,7 @@ export default function Organiser() {
   function toggleMode() {
     setIsSignup((s) => !s);
     setError("");
-    setForm({ name: "", username: "", password: "", confirm: "" });
+    setForm({ name: "", username: "", email: "", phone: "", address: "", gstNo: "", password: "", confirm: "" });
   }
 
   function submitHandler(e) {
@@ -49,7 +49,7 @@ export default function Organiser() {
   }
 
   return (
-    <Layout>
+    <Layout wide={isSignup}>
       <div style={{ perspective: 1200 }} className="relative">
         {!reduceMotion && (
           <motion.div
@@ -92,54 +92,126 @@ export default function Organiser() {
               animate="visible"
               transition={{ staggerChildren: 0.07, delayChildren: 0.15 }}
             >
-              {isSignup && (
-                <motion.div variants={fieldVariants}>
-                  <AuthInput
-                    icon={User}
-                    name="name"
-                    placeholder="Full Name"
-                    value={form.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </motion.div>
-              )}
-
-              <motion.div variants={fieldVariants}>
-                <AuthInput
-                  icon={AtSign}
-                  name="username"
-                  placeholder="Username"
-                  value={form.username}
-                  onChange={handleChange}
-                  required
-                />
-              </motion.div>
-
-              <motion.div variants={fieldVariants}>
-                <AuthInput
-                  icon={Lock}
-                  isPassword
-                  name="password"
-                  placeholder="Password"
-                  value={form.password}
-                  onChange={handleChange}
-                  required
-                />
-              </motion.div>
-
-              {isSignup && (
-                <motion.div variants={fieldVariants}>
-                  <AuthInput
-                    icon={ShieldCheck}
-                    isPassword
-                    name="confirm"
-                    placeholder="Confirm Password"
-                    value={form.confirm}
-                    onChange={handleChange}
-                    required
-                  />
-                </motion.div>
+              {isSignup ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-2.5">
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={Building2}
+                      name="name"
+                      placeholder="Organization Name"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={Mail}
+                      name="email"
+                      type="email"
+                      placeholder="Email Address"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={Phone}
+                      name="phone"
+                      type="tel"
+                      placeholder="Phone Number"
+                      value={form.phone}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={MapPin}
+                      name="address"
+                      placeholder="Organization Address"
+                      value={form.address}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={FileText}
+                      name="gstNo"
+                      placeholder="GST No (Optional)"
+                      value={form.gstNo}
+                      onChange={handleChange}
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={User}
+                      name="username"
+                      placeholder="Username for Login"
+                      value={form.username}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={Lock}
+                      isPassword
+                      name="password"
+                      placeholder="Password"
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={ShieldCheck}
+                      isPassword
+                      name="confirm"
+                      placeholder="Confirm Password"
+                      value={form.confirm}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                </div>
+              ) : (
+                <>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={Building2}
+                      name="name"
+                      placeholder="Organization Name"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={User}
+                      name="username"
+                      placeholder="Username"
+                      value={form.username}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                  <motion.div variants={fieldVariants}>
+                    <AuthInput
+                      icon={Lock}
+                      isPassword
+                      name="password"
+                      placeholder="Password"
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                    />
+                  </motion.div>
+                </>
               )}
 
               {error && (
@@ -150,6 +222,17 @@ export default function Organiser() {
                 >
                   {error}
                 </motion.p>
+              )}
+
+              {!isSignup && (
+                <motion.div variants={fieldVariants} className="flex justify-end mt-1">
+                  <button
+                    type="button"
+                    className="text-[10px] font-bold text-[#B23B32] dark:text-[#D98A3D] hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </motion.div>
               )}
 
               <motion.button

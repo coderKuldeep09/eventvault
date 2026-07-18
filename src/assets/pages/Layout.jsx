@@ -2,11 +2,11 @@ import { TypeAnimation } from "react-type-animation";
 import { motion, useReducedMotion } from "framer-motion";
 import { Aperture, Sparkles } from "lucide-react";
 
-export function Layout({ children }) {
+export function Layout({ children, wide = false }) {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="relative h-screen w-full overflow-x-hidden overflow-y-auto bg-[#F6F3EC] dark:bg-[#17140F] font-sans transition-colors duration-500">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#F6F3EC] dark:bg-[#17140F] font-sans transition-colors duration-500">
       {/* font load for the two accent typefaces used on this page */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@1,600&family=Space+Mono:wght@400;700&display=swap');
@@ -53,14 +53,14 @@ export function Layout({ children }) {
           </motion.div>
         ))}
 
-      <div className="relative z-10 min-h-full flex flex-col items-center justify-center px-6 py-6">
+      <div className="relative z-10 min-h-full flex flex-col items-center justify-center px-6 pb-8 pt-24">
         {/* THE CARD — one ticket-like panel that holds both the brand identity
             and the form. No stacked sections, no split columns: just one page. */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative w-full max-w-sm rounded-[1.75rem] bg-[#FFFDF9] dark:bg-[#1C1812] border border-[#17140F]/10 dark:border-[#EFE9DD]/10 shadow-2xl shadow-[#B23B32]/5"
+          className={`relative w-full ${wide ? "max-w-xl" : "max-w-sm"} rounded-[1.75rem] bg-[#FFFDF9] dark:bg-[#1C1812] border border-[#17140F]/10 dark:border-[#EFE9DD]/10 shadow-2xl shadow-[#B23B32]/5`}
         >
           {/* thin accent hairline along the top edge, gently breathing */}
           <motion.div

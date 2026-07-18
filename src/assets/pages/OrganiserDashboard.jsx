@@ -413,7 +413,14 @@ export default function OrganiserDashboard() {
             <p className="text-pink-500 font-black text-[9px] uppercase tracking-[0.35em] mb-1 flex items-center gap-1.5">
               <Sparkles size={10} /> EventVault · Organiser
             </p>
-            <h1 className="text-3xl font-black italic tracking-tighter leading-none">{event.name}</h1>
+            <h1 className="text-3xl font-black italic tracking-tighter leading-none flex items-center gap-3">
+              {event.numericId && (
+                <span className="text-lg text-pink-500 font-bold bg-pink-500/10 px-2 py-0.5 rounded-xl border border-pink-500/20">
+                  #{event.numericId}
+                </span>
+              )}
+              {event.name}
+            </h1>
           </div>
 
           <div className="flex items-center gap-2">
@@ -692,19 +699,36 @@ export default function OrganiserDashboard() {
                   </Masonry>
                 </>
               ) : (
-                <div className="min-h-[55vh] mt-6 flex flex-col items-center justify-center bg-white/50 dark:bg-gray-900/50 rounded-[4rem] border-4 border-dashed border-gray-100 dark:border-gray-800">
-                  <ImageIcon size={60} className="text-gray-200 mb-4" />
-                  <p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-5">
-                    {scanActive ? "No photos to scan yet" : "Empty Folder"}
-                  </p>
-                  {!scanActive && (
-                    <button
-                      onClick={handleUploadClick}
-                      className="flex items-center gap-1.5 bg-pink-500 text-white px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-pink-600 transition active:scale-95"
-                    >
-                      <Upload size={13} /> Upload photos
-                    </button>
-                  )}
+                <div className="relative min-h-[65vh] mt-6 flex flex-col items-center justify-center bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none dark:bg-gray-900/40 rounded-[4rem] border-4 border-dashed border-gray-200 dark:border-gray-800 transition-all hover:border-pink-300 dark:hover:border-pink-500/30 hover:bg-pink-50/30 dark:hover:bg-gray-900/60 group overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                    <div className="w-64 h-64 bg-pink-400/5 dark:bg-pink-500/5 blur-3xl rounded-full" />
+                  </div>
+
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-24 h-24 mb-6 rounded-[2rem] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-inner flex items-center justify-center border border-gray-200 dark:border-gray-700 group-hover:scale-110 transition-transform duration-500">
+                      <ImageIcon size={40} className="text-gray-300 dark:text-gray-600 group-hover:text-pink-400 transition-colors duration-500" />
+                    </div>
+                    
+                    <h3 className="text-2xl font-black text-gray-800 dark:text-gray-200 uppercase tracking-tighter italic mb-2">
+                      {scanActive ? "No photos to scan" : "Empty Folder"}
+                    </h3>
+                    
+                    <p className="text-gray-400 font-medium text-xs max-w-[260px] text-center leading-relaxed mb-8">
+                      {scanActive 
+                        ? "We couldn't find any photos to scan in this folder right now." 
+                        : "Get started by uploading some memorable photos to this folder."}
+                    </p>
+                    
+                    {!scanActive && (
+                      <button
+                        onClick={handleUploadClick}
+                        className="relative overflow-hidden flex items-center gap-2 bg-gray-900 dark:bg-pink-600 text-white px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-105 hover:shadow-xl hover:shadow-pink-500/20 active:scale-95 transition-all"
+                      >
+                        <Upload size={15} className="text-pink-400 dark:text-white" /> 
+                        <span>Upload photos</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

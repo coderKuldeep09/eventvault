@@ -70,7 +70,10 @@ export function EventAccessPanel({ event, onEventChange }) {
             <QRCodeSVG value={link} size={112} bgColor="#ffffff" fgColor="#17140F" marginSize={0} />
           </div>
           <div className="space-y-3 w-full">
-            <CopyField label="Shareable link" value={link} />
+            <div className="grid grid-cols-2 gap-3">
+              <CopyField label="Event ID" value={current.numericId ? current.numericId.toString() : "N/A"} />
+              <CopyField label="Shareable link" value={link} />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <CopyField label="Guest ID" value={current.guestUsername} />
               <CopyField

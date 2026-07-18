@@ -191,8 +191,12 @@ export function createEvent({ organiserId, name, type, date, planId }) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + plan.retentionDays * 24 * 60 * 60 * 1000);
 
+    const maxNumericId = events.reduce((max, e) => Math.max(max, e.numericId || 0), 0);
+    const numericId = maxNumericId + 1;
+
   const event = {
     id: randomId(),
+    numericId,
     organiserId,
     name: name.trim(),
     type: type || "Wedding",

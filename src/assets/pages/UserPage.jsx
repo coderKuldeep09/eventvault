@@ -312,14 +312,21 @@ export default function UserPage() {
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[4rem] text-center p-12 bg-white/50 dark:bg-transparent">
-                  <div className="w-24 h-24 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mb-6">
-                    <ImageIcon size={40} className="text-gray-200" />
+              <div className="relative min-h-[65vh] flex flex-col items-center justify-center bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none dark:bg-transparent border-4 border-dashed border-gray-200 dark:border-gray-800 rounded-[4rem] text-center p-12 transition-all hover:border-pink-300 dark:hover:border-gray-700 hover:bg-pink-50/30 dark:hover:bg-gray-900/60 group overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                    <div className="w-64 h-64 bg-pink-400/5 dark:bg-pink-500/5 blur-3xl rounded-full" />
                   </div>
-                  <h3 className="text-3xl font-black text-gray-300 uppercase italic tracking-tighter">No Photos Scanned Yet</h3>
-                  <p className="text-gray-400 text-xs mt-3 max-w-xs font-medium leading-relaxed italic">
-                    Once you upload a selfie, we'll search {event.name}'s photos for you.
-                  </p>
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-24 h-24 mb-6 rounded-[2rem] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-inner flex items-center justify-center border border-gray-200 dark:border-gray-700 group-hover:scale-110 transition-transform duration-500">
+                      <ImageIcon size={40} className="text-gray-300 dark:text-gray-600 group-hover:text-pink-400 transition-colors duration-500" />
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-800 dark:text-gray-200 uppercase italic tracking-tighter mb-3">
+                      No Photos Scanned Yet
+                    </h3>
+                    <p className="text-gray-400 text-sm max-w-[280px] font-medium leading-relaxed">
+                      Once you upload a selfie, we'll search {event.name}'s photos for you.
+                    </p>
+                  </div>
               </div>
             )}
           </div>
