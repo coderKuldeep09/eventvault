@@ -169,7 +169,7 @@ export default function UserPage() {
       )}
 
       {/* HEADER */}
-      <header className="flex-none pt-4 pb-4 px-10 max-w-[1800px] w-full mx-auto flex justify-between items-center z-10">
+      <header className="flex-none pt-4 pb-1 px-10 max-w-[1800px] w-full mx-auto flex justify-between items-center z-10">
         <div>
           <div className="flex items-center gap-2 text-pink-500 font-black text-[10px] uppercase tracking-[0.5em] mb-1">
             <Sparkles size={12} className="animate-pulse" /> Find Your Moments
@@ -188,10 +188,10 @@ export default function UserPage() {
       </header>
 
       {/* MAIN LAYOUT */}
-      <main className="flex-1 overflow-hidden px-10 pb-6 max-w-[1800px] w-full mx-auto grid grid-cols-12 gap-8 mt-2">
+      <main className="flex-1 min-h-0 overflow-hidden px-10 pb-8 max-w-[1800px] w-full mx-auto grid grid-cols-12 gap-8 mt-0">
 
         {/* LEFT: CONTROLS */}
-        <div className="col-span-12 lg:col-span-3 h-full flex flex-col gap-6 overflow-hidden pr-2 ">
+        <div className="col-span-12 lg:col-span-3 h-full min-h-0 flex flex-col gap-6 overflow-hidden pr-2 ">
 
           <div className="p-6 rounded-[2.5rem] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl shadow-black/5 ">
              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4 block ml-2">Moment</label>
@@ -257,9 +257,9 @@ export default function UserPage() {
         </div>
 
         {/* RIGHT: GALLERY & DYNAMIC HEADING */}
-        <div className="col-span-12 lg:col-span-9 h-full flex flex-col overflow-hidden">
+        <div className="col-span-12 lg:col-span-9 h-full min-h-0 flex flex-col overflow-hidden">
 
-          <div className="flex items-end justify-between mb-4 px-2">
+          <div className="flex items-end justify-between mb-2 px-2">
             <div className="animate-in fade-in slide-in-from-left duration-500">
               <h2 className="text-4xl font-black italic tracking-tighter leading-none">
                 {matchedPhotos.length > 0 ? (
@@ -272,7 +272,7 @@ export default function UserPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
+          <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-6">
             {matchedPhotos.length > 0 ? (
               <div className="animate-in fade-in zoom-in duration-700">
                 <PhotoSelectionBar

@@ -478,11 +478,11 @@ export default function OrganiserDashboard() {
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-hidden px-8 pb-8 max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="flex-1 min-h-0 overflow-hidden px-8 pb-8 max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
 
         {/* LEFT PANEL */}
-        <div className="lg:col-span-4 xl:col-span-3 h-full">
-          <div className={`flex flex-col h-full rounded-[2.5rem] shadow-2xl border transition-all ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-white'}`}>
+        <div className="lg:col-span-4 xl:col-span-3 h-full min-h-0">
+          <div className={`flex flex-col h-full min-h-0 rounded-[2.5rem] shadow-2xl border transition-all ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-white'}`}>
 
             <div className="p-6 flex-none">
               <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Folders</h2>
@@ -571,9 +571,9 @@ export default function OrganiserDashboard() {
         </div>
 
         {/* RIGHT PANEL - Viewport Scrollable */}
-        <div className="lg:col-span-8 xl:col-span-9 h-full overflow-y-auto custom-scrollbar pr-2">
+        <div className="lg:col-span-8 xl:col-span-9 h-full min-h-0 overflow-y-auto custom-scrollbar pr-2 flex flex-col">
           {activeCategory ? (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 flex flex-col min-h-full">
               <div className="mb-4 flex justify-between items-center border-b pb-3 dark:border-gray-800 sticky top-0 bg-[#fffcfc] dark:bg-gray-950 z-10">
                 <div className="flex items-baseline gap-3">
                   <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter dark:text-white leading-none flex items-center gap-2">
@@ -699,7 +699,7 @@ export default function OrganiserDashboard() {
                   </Masonry>
                 </>
               ) : (
-                <div className="relative min-h-[65vh] mt-6 flex flex-col items-center justify-center bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none dark:bg-gray-900/40 rounded-[4rem] border-4 border-dashed border-gray-200 dark:border-gray-800 transition-all hover:border-pink-300 dark:hover:border-pink-500/30 hover:bg-pink-50/30 dark:hover:bg-gray-900/60 group overflow-hidden">
+                <div className="relative flex-1 mt-6 flex flex-col items-center justify-center bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none dark:bg-gray-900/40 rounded-[4rem] border-4 border-dashed border-gray-200 dark:border-gray-800 transition-all hover:border-pink-300 dark:hover:border-pink-500/30 hover:bg-pink-50/30 dark:hover:bg-gray-900/60 group overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
                     <div className="w-64 h-64 bg-pink-400/5 dark:bg-pink-500/5 blur-3xl rounded-full" />
                   </div>

@@ -109,7 +109,7 @@ function AdminVault({ event, onLock }) {
       )}
 
       {/* FIXED HEADER */}
-      <header className="flex-none pt-5 pb-3 px-10 max-w-[1800px] w-full mx-auto flex justify-between items-start z-10 gap-4">
+      <header className="flex-none pt-3 pb-1 px-10 max-w-[1800px] w-full mx-auto flex justify-between items-start z-10 gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-pink-500 font-black text-[10px] uppercase tracking-[0.4em] mb-1">
             <ShieldCheck size={12} /> Face Vault Admin
@@ -158,10 +158,10 @@ function AdminVault({ event, onLock }) {
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-hidden px-10 pb-6 max-w-[1800px] w-full mx-auto grid grid-cols-12 gap-8">
+      <main className="flex-1 min-h-0 overflow-hidden px-10 pb-8 max-w-[1800px] w-full mx-auto grid grid-cols-12 gap-8">
 
         {/* LEFT PANEL */}
-        <div className="col-span-12 lg:col-span-3 h-full flex flex-col gap-6 overflow-hidden">
+        <div className="col-span-12 lg:col-span-3 h-full min-h-0 flex flex-col gap-6 overflow-hidden">
 
           <div className={`p-6 rounded-[2.5rem] border shadow-xl flex flex-col overflow-hidden ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-pink-50'}`}>
              <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Navigation</h2>
@@ -203,7 +203,7 @@ function AdminVault({ event, onLock }) {
         </div>
 
         {/* RIGHT: GALLERY DISPLAY */}
-        <div className="col-span-12 lg:col-span-9 h-full overflow-y-auto custom-scroll pr-4 pb-10">
+        <div className="col-span-12 lg:col-span-9 h-full min-h-0 overflow-y-auto custom-scroll pr-4 pb-6">
           {displayPhotos.length > 0 ? (
             <>
               <PhotoSelectionBar
